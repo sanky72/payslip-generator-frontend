@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
 import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 function App() {
   const [items, setItems] = useState([]);
@@ -108,6 +110,36 @@ function App() {
     }
   }, [items]);
 
+  function generatePdfs() {
+    result.forEach((emp) => {
+      let doc = new jsPDF();
+      const tableColumn = Object.keys(emp);
+      const tableRows = [];
+      tableColumn.forEach((key) => {
+        tableRows.push(emp[key]);
+      });
+      console.log(tableRows);
+      doc.text(`Payslip for the month ${sheetName}`, 14, 10);
+
+      let start = 0;
+      while (start < tableColumn.length) {
+        let left = start;
+        let right = start + 2;
+        console.log(
+          tableColumn.slice(left, right + 1),
+          tableRows.slice(left, right + 1)
+        );
+        doc.autoTable({
+          head: [tableColumn.slice(left, right + 1)],
+          body: [tableRows.slice(left, right + 1)],
+          theme: "grid",
+        });
+        start += 2;
+      }
+      doc.save(`${emp["Name Of Employee"]}-${sheetName}.pdf`);
+    });
+  }
+
   return (
     <div>
       <input
@@ -136,7 +168,11 @@ function App() {
       >
         Submit{" "}
       </button>
-      {resultGenerated ? <button>Generate Pdf</button> : ""}
+      {resultGenerated ? (
+        <button onClick={() => generatePdfs()}>Generate Pdf</button>
+      ) : (
+        ""
+      )}
 
       {error ? <div>There is an error</div> : ""}
     </div>
